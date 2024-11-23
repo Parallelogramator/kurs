@@ -5,7 +5,7 @@ KEY_MAP = {
     "CTRL": "LEFT_CTRL",
     "ALT": "LEFT_ALT",
     "SHIFT": "LEFT_SHIFT",
-    "e": "ESC",
+    "ESCAPE": "ESC",
     "ENTER": "RETURN",
     "TAB": "TAB",
     "SPACE": "SPACEBAR",
@@ -65,7 +65,7 @@ def generate_ino_file(modes):
     
     public:
         ModeContext() {{
-            {'\n'.join([f'strategies[{i}] = new mode{i + 1}();' for i in range(len(modes))])}
+            {'\n'.join([f'strategies[{n}] = new {i.lower().replace(" ", "")}();' for n, i in enumerate(modes.keys())])}
         }}
     
         ~ModeContext() {{
