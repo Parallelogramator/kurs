@@ -12,15 +12,17 @@ from upload import upload_ino_file
 class KeyCaptureLineEdit(QLineEdit):
     def __init__(self):
         super().__init__()
-        self.captured_keys = set()
-        self.recording = False
+        self.captured_keys = set()  # Множество для уникальных клавиш
+        self.recording = False  # Флаг записи
+        self.modifiers = set()  # Множество для модификаторов (Ctrl, Shift, Alt)
 
     def focusInEvent(self, event):
         """Начать запись при фокусе на поле ввода."""
         super().focusInEvent(event)
         self.recording = True
-        self.captured_keys.clear()
-        self.setText("")
+        self.captured_keys.clear()  # Очистка предыдущих записей
+        self.modifiers.clear()  # Очистка модификаторов
+        self.setText("")  # Очищаем текстовое поле
 
     def focusOutEvent(self, event):
         """Остановить запись при потере фокуса."""
@@ -28,47 +30,55 @@ class KeyCaptureLineEdit(QLineEdit):
         self.recording = False
 
     def keyPressEvent(self, event):
-        """Обрабатывать нажатие клавиш."""
+        """Обработка нажатия клавиш."""
         if self.recording:
             key = event.key()
-            modifiers = QApplication.keyboardModifiers()
             keys = []
 
+            # Обработка модификаторов
+            modifiers = QApplication.keyboardModifiers()
             if modifiers & Qt.ControlModifier:
-                keys.append("Ctrl")
+                self.modifiers.add("Ctrl")
             if modifiers & Qt.ShiftModifier:
-                keys.append("Shift")
+                self.modifiers.add("Shift")
             if modifiers & Qt.AltModifier:
-                keys.append("Alt")
+                self.modifiers.add("Alt")
 
-            # Добавляем основную клавишу
-            if key >= Qt.Key_A and key <= Qt.Key_Z:
+            # Обработка обычных клавиш
+            if key >= Qt.Key_A and key <= Qt.Key_Z:  # Буквы
                 keys.append(chr(key))
-            elif key == Qt.Key_Space:
+            elif key >= Qt.Key_0 and key <= Qt.Key_9:  # Цифры
+                keys.append(chr(key))
+            elif key == Qt.Key_Space:  # Пробел
                 keys.append("Space")
-            elif key == Qt.Key_Backspace:
+            elif key == Qt.Key_Backspace:  # Backspace
                 keys.append("Backspace")
-            elif key == Qt.Key_Delete:
+            elif key == Qt.Key_Delete:  # Delete
                 keys.append("Delete")
-            elif key == Qt.Key_Enter or key == Qt.Key_Return:
+            elif key == Qt.Key_Enter or key == Qt.Key_Return:  # Enter
                 keys.append("Enter")
-            elif key == Qt.Key_Tab:
+            elif key == Qt.Key_Tab:  # Tab
                 keys.append("Tab")
-            elif key == Qt.Key_Escape:
+            elif key == Qt.Key_Escape:  # Escape
                 keys.append("Escape")
-            elif key >= Qt.Key_0 and key <= Qt.Key_9:
-                keys.append(chr(key))
+
+            # Обработка функциональных клавиш F1 - F12
+            for i in range(1, 13):
+                if key == getattr(Qt, f"Key_F{i}"):
+                    keys.append(f"F{i}")
 
             # Обновляем текстовое поле с комбинацией
-            self.captured_keys.update(keys)
-            self.setText("+".join(sorted(self.captured_keys)))
+            all_keys = sorted(self.modifiers)+sorted(set(keys))  # Совмещаем модификаторы и обычные клавиши
+            self.setText("+".join(all_keys))  # Форматируем через '+'
+
         else:
             super().keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
-        """Обрабатывать отпускание клавиш."""
+        """Обработка отпускания клавиш."""
         if not self.recording:
             super().keyReleaseEvent(event)
+
 
 
 class ArduinoCodeGenerator(QMainWindow):
@@ -113,11 +123,8 @@ class ArduinoCodeGenerator(QMainWindow):
         self.save_button.clicked.connect(self.save_mode_data)
         layout.addWidget(self.save_button)
 
-        self.generate_button = QPushButton("Generate .ino File")
-        self.generate_button.clicked.connect(self.on_generate_code_clicked)
-        layout.addWidget(self.generate_button)
 
-        self.upload_button = QPushButton("upload .ino File")
+        self.upload_button = QPushButton("Upload .ino File")
         self.upload_button.clicked.connect(self.on_upload_code_clicked)
         layout.addWidget(self.upload_button)
 
@@ -185,25 +192,21 @@ class ArduinoCodeGenerator(QMainWindow):
         self.modes[mode]["button2"]["type"] = self.button2_action_type.currentText()
         self.modes[mode]["button2"]["action"] = self.button2_stacked_input.currentWidget().text()
 
-    def on_generate_code_clicked(self):
+    def on_upload_code_clicked(self):
         """Генерация файла .ino при нажатии кнопки."""
         self.save_mode_data()
         check = generate_ino_file(self.modes)
 
-        if check:
-            QMessageBox.information(self, "Success", "File generated successfully.")
-        else:
-            QMessageBox.warning(self, "Error", "Error generating file.")
+        if check == 1:
+            check = upload_ino_file("kurs.ino")
 
-    def on_upload_code_clicked(self):
-        """Генерация файла .ino при нажатии кнопки."""
-        self.save_mode_data()
-        check = upload_ino_file("kurs.ino")
-
-        if check:
-            QMessageBox.information(self, "Success", "File generated successfully.")
+            if check == 1:
+                QMessageBox.information(self, "Success", "Drive upload successfully.")
+            else:
+                QMessageBox.warning(self, "Error", str(check))
         else:
-            QMessageBox.warning(self, "Error", "Error generating file.")
+            QMessageBox.warning(self, "Error", str(check))
+
 
 
 if __name__ == "__main__":
