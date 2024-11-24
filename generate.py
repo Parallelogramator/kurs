@@ -1,5 +1,3 @@
-import re
-
 # Словарь сопоставления клавиш из QT в Arduino HID
 KEY_MAP = {
     "CTRL": "LEFT_CTRL",
@@ -13,28 +11,33 @@ KEY_MAP = {
     "DOWN": "DOWN_ARROW",
     "LEFT": "LEFT_ARROW",
     "RIGHT": "RIGHT_ARROW",
-    # Добавьте другие клавиши по необходимости
 }
 
 
-def generate_ino_file(modes):
+def generate_ino_file(modes, standard_buttons, dropdown_buttons):
     try:
         """Генерирует файл .ino на основе переданных данных."""
         # Генерация функций для каждого режима
+
         mode_functions = []
         for mode, actions in modes.items():
-            button1_code = generate_button_action(actions["button1"])
-            button2_code = generate_button_action(actions["button2"])
+            button_code = []
+            for button, action in actions["standard_buttons"].items():
+                button_code.append(generate_standard_button_action(button[-1], action))
+            dropdown_code = []
+            for button, action in actions["dropdown_buttons"].items():
+                if action != 'Nothing':
+                    dropdown_code.append(f'handle{action}Control(A{int(button[-1]) - 1});')
+
             function = f"""
     class {mode.lower().replace(" ", "")} : public ModeStrategy {{
     public:
-        void execute(bool button1State, bool button2State) {{
-            if (button1State) {{
-                {button1_code}
-            }}
-            if (button2State) {{
-                {button2_code}
-            }}
+        void execute() override{{
+            bool {','.join([f'button{i + 1}State' for i in range(standard_buttons)])};
+            checkButtonStates({','.join([f'button{i + 1}State' for i in range(standard_buttons)])});
+            {'\n'.join([i for i in button_code])};
+            
+            {'\n'.join([i for i in dropdown_code])}
         }}
     }};
     """
@@ -45,19 +48,39 @@ def generate_ino_file(modes):
     #include <HID-Project.h>   // Для реализации HID-функций
     
     // Пины для кнопок, переключателя и потенциометра
-    const int button1Pin = 2; // Программируемая кнопка 1
-    const int button2Pin = 3; // Программируемая кнопка 2
+    {'\n'.join([f'const int button{i + 1}Pin = {i + 2};' for i in range(standard_buttons)])}
     const int switchPin = 4;  // Кнопка для переключения режимов
     const int potPin = A0;    // Пин потенциометра
+    {'\n'.join([f'const int pot{i + 1}Pin = A{i};' for i in range(dropdown_buttons)])}
+    
+    void handleVolumeControl(int pin) {{
+    static int lastPotValue = 0; // Предыдущее значение потенциометра
+    int potValue = analogRead(pin);
+
+    if (abs(potValue - lastPotValue) > 10) {{ // Проверка изменения
+        int volumeChange = map(potValue, 0, 1023, -10, 10);
+        if (volumeChange > 0) {{
+            for (int i = 0; i < volumeChange; i++) {{
+                Consumer.write(MEDIA_VOLUME_UP);
+            }}
+        }} else {{
+            for (int i = 0; i < abs(volumeChange); i++) {{
+                Consumer.write(MEDIA_VOLUME_DOWN);
+            }}
+        }}
+        lastPotValue = potValue;
+        delay(50);
+        }}
+    }}
     
     // Базовый интерфейс для стратегии
     class ModeStrategy {{
     public:
-        virtual void execute(bool button1State, bool button2State) = 0;
+        virtual void execute() = 0;
         virtual ~ModeStrategy() = default;
     }};
     
-    {''.join(mode_functions)}
+    {'\n'.join(mode_functions)}
     
     class ModeContext {{
         ModeStrategy* strategies[{len(modes)}]; // Список стратегий
@@ -78,14 +101,14 @@ def generate_ino_file(modes):
             currentMode = (currentMode + 1) % {len(modes)}; // Циклический переход по режимам
         }}
     
-        void executeCurrentMode(bool button1State, bool button2State) {{
-            strategies[currentMode]->execute(button1State, button2State);
+        void executeCurrentMode() {{
+            strategies[currentMode]->execute();
         }}
     }};
     
     // Переменные для управления
     int lastPotValue = 0;       // Предыдущее значение потенциометра
-    int debounceDelay = 50;     // Задержка для антидребезга
+    int debounceDelay = 500;     // Задержка для антидребезга
     unsigned long lastDebounceTime = 0;
     
     // Создаем контекст
@@ -93,8 +116,7 @@ def generate_ino_file(modes):
     
     void setup() {{
         // Инициализация пинов
-        pinMode(button1Pin, INPUT_PULLUP);
-        pinMode(button2Pin, INPUT_PULLUP);
+        {'\n'.join([f'pinMode(button{i + 1}Pin, INPUT_PULLUP);' for i in range(standard_buttons)])}
         pinMode(switchPin, INPUT_PULLUP);
     
         // Инициализация HID
@@ -102,59 +124,24 @@ def generate_ino_file(modes):
         Consumer.begin();
     }}
     
-    // Переключение режимов
-    void handleModeSwitch() {{
-        static bool lastSwitchState = HIGH;
-        bool switchState = digitalRead(switchPin);
-    
-        if (switchState != lastSwitchState) {{
-            if (millis() - lastDebounceTime > debounceDelay) {{
-                modeContext.switchMode(); // Переключаем режим
-                lastDebounceTime = millis();
-            }}
-        }}
-        lastSwitchState = switchState;
-    }}
-    
-    // Управление громкостью через потенциометр
-    void handleVolumeControl() {{
-        int potValue = analogRead(potPin);
-    
-        if (abs(potValue - lastPotValue) > 10) {{ // Проверка изменения
-            int volumeChange = map(potValue, 0, 1023, -10, 10);
-            if (volumeChange > 0) {{
-                for (int i = 0; i < volumeChange; i++) {{
-                    Consumer.write(MEDIA_VOLUME_UP);
-                }}
-            }} else {{
-                for (int i = 0; i < abs(volumeChange); i++) {{
-                    Consumer.write(MEDIA_VOLUME_DOWN);
-                }}
-            }}
-            lastPotValue = potValue;
-            delay(50);
-        }}
-    }}
     
     // Обработка кнопок
-    void handleButtonActions() {{
-        static bool lastButton1State = HIGH;
-        static bool lastButton2State = HIGH;
-    
-        bool button1State = digitalRead(button1Pin) == LOW && lastButton1State == HIGH;
-        bool button2State = digitalRead(button2Pin) == LOW && lastButton2State == HIGH;
-    
-        modeContext.executeCurrentMode(button1State, button2State); // Выполняем текущую стратегию
-        delay(200); // Задержка предотвращает дребезг
-    
-        lastButton1State = digitalRead(button1Pin);
-        lastButton2State = digitalRead(button2Pin);
-    }}
+    void checkButtonStates({','.join([f'bool &button{i + 1}State' for i in range(standard_buttons)])}) {{
+    {'\n'.join([f'button{i + 1}State = digitalRead(button{i + 1}Pin) == HIGH;' for i in range(standard_buttons)])}
+    }}  
     
     void loop() {{
-        handleModeSwitch();
-        handleVolumeControl();
-        handleButtonActions();
+    bool switchState = digitalRead(switchPin);
+
+    if (switchState) {{
+        if (millis() - lastDebounceTime > debounceDelay) {{
+            modeContext.switchMode(); // Переключаем режим
+            lastDebounceTime = millis();
+        }}
+    }}
+    
+    modeContext.executeCurrentMode(); // Выполняем текущую стратегию
+    delay(200); // Задержка предотвращает дребезг
     }}
     
     """
@@ -164,12 +151,14 @@ def generate_ino_file(modes):
     except Exception as e:
         return e
 
-def generate_button_action(button):
+
+def generate_standard_button_action(n, button):
     """Генерирует действие для кнопки в зависимости от её типа."""
+    ret = f"if (button{n}State) {{\n"
     if button["type"] == "Print Text":
         # Экранируем кавычки внутри текста
         action_text = button["action"].replace('"', '\\"')
-        return f'Keyboard.print("{action_text}");'
+        return ret + f'Keyboard.print("{action_text}");' + "\n}"
     elif button["type"] == "Key Combination":
         res = ""
         keys = button["action"].split("+")
@@ -177,5 +166,5 @@ def generate_button_action(button):
             arduino_key = KEY_MAP.get(key.upper(), key.upper())
             res += f'Keyboard.press(KEY_{arduino_key});\n'
         res += "Keyboard.releaseAll();"
-        return res
+        return ret + res + "\n}"
     return ""

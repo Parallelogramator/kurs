@@ -8,25 +8,28 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QRegularExpression
 import qdarkstyle
 
-
 from generate import generate_ino_file
 from upload import upload_ino_file
+
 
 class KeyCaptureLineEdit(QLineEdit):
     def __init__(self):
         super().__init__()
         self.captured_keys = set()
         self.recording = False
+
     def focusInEvent(self, event):
         """Начать запись при фокусе на поле ввода."""
         super().focusInEvent(event)
         self.recording = True
         self.captured_keys.clear()
         self.setText("")
+
     def focusOutEvent(self, event):
         """Остановить запись при потере фокуса."""
         super().focusOutEvent(event)
         self.recording = False
+
     def keyPressEvent(self, event):
         """Обрабатывать нажатие клавиш."""
         if self.recording:
@@ -61,6 +64,7 @@ class KeyCaptureLineEdit(QLineEdit):
             self.setText("+".join(sorted(self.captured_keys)))
         else:
             super().keyPressEvent(event)
+
     def keyReleaseEvent(self, event):
         """Обрабатывать отпускание клавиш."""
         if not self.recording:
@@ -74,7 +78,9 @@ class ArduinoCodeGenerator(QMainWindow):
         self.setWindowTitle("Arduino Code Generator")
         self.setGeometry(100, 100, 1000, 700)  # Увеличенное окно
 
-        self.num_buttons = 4  # Количество кнопок фиксируется в коде
+        self.num_standard_buttons = 4  # Количество стандартных кнопок
+        self.num_dropdown_buttons = 2  # Количество кнопок с выпадающими списками
+
         self.modes = {}  # Словарь для данных режимов
 
         self.setup_ui()
@@ -105,13 +111,23 @@ class ArduinoCodeGenerator(QMainWindow):
         mode_control_layout.addWidget(rename_mode_button)
         main_layout.addLayout(mode_control_layout)
 
-        # Сетка для кнопок
-        self.grid_layout = QGridLayout()
-        main_layout.addLayout(self.grid_layout)
+        # Сетка для стандартных кнопок
+        self.standard_buttons_layout = QGridLayout()
+        main_layout.addWidget(QLabel("Standard Buttons:"))
+        main_layout.addLayout(self.standard_buttons_layout)
 
-        # Создание интерфейса для кнопок
-        for i in range(self.num_buttons):
-            self.create_button_ui(f"Button {i + 1}", i)
+        # Создание интерфейса для стандартных кнопок
+        for i in range(self.num_standard_buttons):
+            self.create_standard_button_ui(f"Button {i + 1}", i)
+
+        # Сетка для кнопок с выпадающими списками
+        self.dropdown_buttons_layout = QGridLayout()
+        main_layout.addWidget(QLabel("Dropdown Buttons:"))
+        main_layout.addLayout(self.dropdown_buttons_layout)
+
+        # Создание интерфейса для кнопок с выпадающими списками
+        for i in range(self.num_dropdown_buttons):
+            self.create_dropdown_button_ui(f"Dropdown Button {i + 1}", i)
 
         # Управляющие кнопки
         self.save_button = QPushButton("Save Changes")
@@ -124,7 +140,7 @@ class ArduinoCodeGenerator(QMainWindow):
 
         self.add_mode()  # Добавление первого режима по умолчанию
 
-    def create_button_ui(self, label, index):
+    def create_standard_button_ui(self, label, index):
         """Создаёт интерфейс для настройки кнопок."""
         action_type = QComboBox()
         action_type.addItems(["Print Text", "Key Combination"])
@@ -139,19 +155,37 @@ class ArduinoCodeGenerator(QMainWindow):
         clear_button = QPushButton("Clear")
         clear_button.clicked.connect(lambda: self.clear_field(stacked_input))
 
-        self.grid_layout.addWidget(QLabel(f"{label} Action Type:"), index, 0)
-        self.grid_layout.addWidget(action_type, index, 1)
-        self.grid_layout.addWidget(stacked_input, index, 2)
-        self.grid_layout.addWidget(clear_button, index, 3)
+        self.standard_buttons_layout.addWidget(QLabel(f"{label} Action Type:"), index, 0)
+        self.standard_buttons_layout.addWidget(action_type, index, 1)
+        self.standard_buttons_layout.addWidget(stacked_input, index, 2)
+        self.standard_buttons_layout.addWidget(clear_button, index, 3)
 
         # Упрощённое именование
-        setattr(self, f"button{index + 1}_action_type", action_type)
-        setattr(self, f"button{index + 1}_stacked_input", stacked_input)
+        setattr(self, f"standard_button{index + 1}_action_type", action_type)
+        setattr(self, f"standard_button{index + 1}_stacked_input", stacked_input)
+
+    def create_dropdown_button_ui(self, label, index):
+        """Создаёт интерфейс для кнопок с выпадающими списками."""
+        dropdown_selector = QComboBox()
+        dropdown_selector.addItems(["Nothing", "Volume", "Brightness"])
+
+        self.dropdown_buttons_layout.addWidget(QLabel(f"{label}:"), index, 0)
+        self.dropdown_buttons_layout.addWidget(dropdown_selector, index, 1)
+
+        # Упрощённое именование
+        setattr(self, f"dropdown_button{index + 1}_selector", dropdown_selector)
 
     def add_mode(self):
         """Добавление нового режима."""
         new_mode_name = f"Mode {len(self.modes) + 1}"
-        self.modes[new_mode_name] = {f"button{i + 1}": {"type": "Print Text", "action": ""} for i in range(self.num_buttons)}
+        self.modes[new_mode_name] = {
+            "standard_buttons": {
+                f"button{i + 1}": {"type": "Print Text", "action": ""} for i in range(self.num_standard_buttons)
+            },
+            "dropdown_buttons": {
+                f"dropdown_button{i + 1}": "Nothing" for i in range(self.num_dropdown_buttons)
+            }
+        }
         self.mode_selector.addItem(new_mode_name)
         self.mode_selector.setCurrentIndex(self.mode_selector.count() - 1)
 
@@ -194,20 +228,24 @@ class ArduinoCodeGenerator(QMainWindow):
         current_mode = self.mode_selector.currentText()
         if current_mode in self.modes:
             mode_data = self.modes[current_mode]
-            for i in range(self.num_buttons):
-                button_data = mode_data[f"button{i + 1}"]
-                action_type = getattr(self, f"button{i + 1}_action_type")
-                stacked_input = getattr(self, f"button{i + 1}_stacked_input")
+            for i in range(self.num_standard_buttons):
+                button_data = mode_data["standard_buttons"][f"button{i + 1}"]
+                action_type = getattr(self, f"standard_button{i + 1}_action_type")
+                stacked_input = getattr(self, f"standard_button{i + 1}_stacked_input")
                 action_type.setCurrentText(button_data["type"])
                 stacked_input.widget(0).setText(button_data["action"])
                 stacked_input.widget(1).setText(button_data["action"])
-                self.update_input_type()
+            # Обновление кнопок с выпадающими списками
+            for i in range(self.num_dropdown_buttons):
+                dropdown_value = mode_data["dropdown_buttons"][f"dropdown_button{i + 1}"]
+                dropdown_selector = getattr(self, f"dropdown_button{i + 1}_selector")
+                dropdown_selector.setCurrentText(dropdown_value)
 
     def update_input_type(self):
         """Обновляет видимость полей ввода."""
-        for i in range(self.num_buttons):
-            action_type = getattr(self, f"button{i + 1}_action_type").currentText()
-            stacked_input = getattr(self, f"button{i + 1}_stacked_input")
+        for i in range(self.num_standard_buttons):
+            action_type = getattr(self, f"standard_button{i + 1}_action_type").currentText()
+            stacked_input = getattr(self, f"standard_button{i + 1}_stacked_input")
             stacked_input.setCurrentIndex(0 if action_type == "Print Text" else 1)
 
     def clear_field(self, stacked_input):
@@ -219,16 +257,24 @@ class ArduinoCodeGenerator(QMainWindow):
         """Сохраняет текущие данные режима."""
         current_mode = self.mode_selector.currentText()
         if current_mode in self.modes:
-            for i in range(self.num_buttons):
-                action_type = getattr(self, f"button{i + 1}_action_type").currentText()
-                stacked_input = getattr(self, f"button{i + 1}_stacked_input")
+            # Сохранение данных стандартных кнопок
+            for i in range(self.num_standard_buttons):
+                action_type = getattr(self, f"standard_button{i + 1}_action_type").currentText()
+                stacked_input = getattr(self, f"standard_button{i + 1}_stacked_input")
                 action_text = stacked_input.currentWidget().text()
-                self.modes[current_mode][f"button{i + 1}"] = {"type": action_type, "action": action_text}
+                self.modes[current_mode]["standard_buttons"][f"button{i + 1}"] = {"type": action_type,
+                                                                                  "action": action_text}
+
+            # Сохранение данных кнопок с выпадающими списками
+            for i in range(self.num_dropdown_buttons):
+                dropdown_selector = getattr(self, f"dropdown_button{i + 1}_selector")
+                dropdown_value = dropdown_selector.currentText()
+                self.modes[current_mode]["dropdown_buttons"][f"dropdown_button{i + 1}"] = dropdown_value
 
     def on_upload_code_clicked(self):
         """Генерация файла .ino при нажатии кнопки."""
         self.save_mode_data()
-        check = generate_ino_file(self.modes)
+        check = generate_ino_file(self.modes, self.num_standard_buttons, self.num_dropdown_buttons)
 
         if check == 1:
             check = upload_ino_file("kurs.ino")
@@ -241,11 +287,9 @@ class ArduinoCodeGenerator(QMainWindow):
             QMessageBox.warning(self, "Error", str(check))
 
 
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    #app.setStyle('fusion')
+    # app.setStyle('fusion')
     window = ArduinoCodeGenerator()
     window.show()
     sys.exit(app.exec_())
