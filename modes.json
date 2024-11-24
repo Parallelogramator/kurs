@@ -1,0 +1,50 @@
+{
+    "Mode 1": {
+        "standard_buttons": {
+            "button1": {
+                "type": "Print Text",
+                "action": "asd"
+            },
+            "button2": {
+                "type": "Print Text",
+                "action": "asd"
+            },
+            "button3": {
+                "type": "Print Text",
+                "action": "qwe"
+            },
+            "button4": {
+                "type": "Print Text",
+                "action": "wqe"
+            }
+        },
+        "dropdown_buttons": {
+            "dropdown_button1": "Nothing",
+            "dropdown_button2": "Volume"
+        }
+    },
+    "asdasd": {
+        "standard_buttons": {
+            "button1": {
+                "type": "Print Text",
+                "action": "qe"
+            },
+            "button2": {
+                "type": "Print Text",
+                "action": "q"
+            },
+            "button3": {
+                "type": "Print Text",
+                "action": "qq"
+            },
+            "button4": {
+                "type": "Key Combination",
+                "action": "Ctrl+D+S"
+            }
+        },
+        "dropdown_buttons": {
+            "dropdown_button1": "Volume",
+            "dropdown_button2": "Volume"
+        }
+    }
+}

@@ -1,3 +1,4 @@
+import json
 import sys
 
 from PyQt5.QtGui import QRegularExpressionValidator
@@ -83,6 +84,7 @@ class ArduinoCodeGenerator(QMainWindow):
 
         self.modes = {}  # Словарь для данных режимов
 
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -138,8 +140,27 @@ class ArduinoCodeGenerator(QMainWindow):
         self.generate_button.clicked.connect(self.on_upload_code_clicked)
         main_layout.addWidget(self.generate_button)
 
-        self.add_mode()  # Добавление первого режима по умолчанию
+        try:
+            with open("modes.json", "r+") as f:
+                try:
+                    self.modes = json.load(f)
+                    self.update_mode_selector()
+                except json.JSONDecodeError:
+                    self.modes = {}
+                    self.add_mode()
+        except FileNotFoundError:
+            self.modes = {}
+            self.add_mode()  # Добавление первого режима по умолчанию
 
+
+    def update_mode_selector(self):
+        """Обновляет QComboBox mode_selector на основе данных self.modes."""
+        self.mode_selector.clear()
+        for mode_name in self.modes.keys():
+            self.mode_selector.addItem(mode_name)
+        if self.mode_selector.count() > 0:
+            self.mode_selector.setCurrentIndex(0)
+            self.update_mode()
     def create_standard_button_ui(self, label, index):
         """Создаёт интерфейс для настройки кнопок."""
         action_type = QComboBox()
@@ -270,6 +291,8 @@ class ArduinoCodeGenerator(QMainWindow):
                 dropdown_selector = getattr(self, f"dropdown_button{i + 1}_selector")
                 dropdown_value = dropdown_selector.currentText()
                 self.modes[current_mode]["dropdown_buttons"][f"dropdown_button{i + 1}"] = dropdown_value
+        with open("modes.json", "w") as f:
+            json.dump(self.modes, f, indent=4)
 
     def on_upload_code_clicked(self):
         """Генерация файла .ino при нажатии кнопки."""
