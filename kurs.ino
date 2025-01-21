@@ -45,46 +45,36 @@ const int pot2Pin = A1;
             bool button1State,button2State,button3State,button4State;
             checkButtonStates(button1State,button2State,button3State,button4State);
             if (button1State) {
-Keyboard.print("sfda");
+Keyboard.print("asd");
 }
 if (button2State) {
-Keyboard.print("sadf");
+Keyboard.print("asd");
 }
 if (button3State) {
-Keyboard.press(KEY_LEFT_CTRL);
-Keyboard.press(KEY_D);
-Keyboard.press(KEY_S);
-Keyboard.releaseAll();
+Keyboard.print("qwe");
 }
 if (button4State) {
-Keyboard.press(KEY_LEFT_ALT);
-Keyboard.press(KEY_ESC);
-Keyboard.press(KEY_Q);
-Keyboard.press(KEY_W);
-Keyboard.releaseAll();
+Keyboard.print("wqe");
 };
             
-            handleVolumeControl(A0);
+            handleVolumeControl(A1);
         }
     };
     
 
-    class safasd : public ModeStrategy {
+    class asdasd : public ModeStrategy {
     public:
         void execute() override{
             bool button1State,button2State,button3State,button4State;
             checkButtonStates(button1State,button2State,button3State,button4State);
             if (button1State) {
-Keyboard.print("dfg");
+Keyboard.print("qe");
 }
 if (button2State) {
-Keyboard.press(KEY_LEFT_CTRL);
-Keyboard.press(KEY_D);
-Keyboard.press(KEY_S);
-Keyboard.releaseAll();
+Keyboard.print("q");
 }
 if (button3State) {
-Keyboard.print("sfg");
+Keyboard.print("qq");
 }
 if (button4State) {
 Keyboard.press(KEY_LEFT_CTRL);
@@ -93,7 +83,8 @@ Keyboard.press(KEY_S);
 Keyboard.releaseAll();
 };
             
-            handleVolumeControl(A1);
+            handleVolumeControl(A0);
+handleVolumeControl(A1);
         }
     };
     
@@ -105,7 +96,7 @@ Keyboard.releaseAll();
     public:
         ModeContext() {
             strategies[0] = new mode1();
-strategies[1] = new safasd();
+strategies[1] = new asdasd();
         }
     
         ~ModeContext() {

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ArduinoCodeGeneratorUI</class>
+ <widget class="QMainWindow" name="ArduinoCodeGeneratorUI">
+  <property name="geometry">
+   <rect>
+    <x>100</x>
+    <y>100</y>
+    <width>1000</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Arduino Code Generator</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="mainLayout">
+    <item>
+     <widget class="QLabel" name="labelSelectMode">
+      <property name="text">
+       <string>Select Mode:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="modeSelector"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="modeControlLayout">
+      <item>
+       <widget class="QPushButton" name="addModeButton">
+        <property name="text">
+         <string>Add Mode</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="removeModeButton">
+        <property name="text">
+         <string>Remove Mode</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="renameModeButton">
+        <property name="text">
+         <string>Rename Mode</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelStandardButtons">
+      <property name="text">
+       <string>Standard Buttons:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="standardButtonsLayout"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="labelDropdownButtons">
+      <property name="text">
+       <string>Dropdown Buttons:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="dropdownButtonsLayout"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="saveButton">
+      <property name="text">
+       <string>Save Changes</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="generateButton">
+      <property name="text">
+       <string>Upload .ino File</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -62,7 +62,14 @@ class KeyCaptureLineEdit(QLineEdit):
                 keys.append(chr(key))
             # Обновляем текстовое поле с комбинацией
             self.captured_keys.update(keys)
-            self.setText("+".join(sorted(self.captured_keys)))
+
+            def sort_key(item):
+                if item in ["Ctrl", "Shift", "Alt", "Space", "Backspace", "Delete", "Enter", "Tab", "Escape"]:
+                    return (0, item)
+                else:
+                    return (1, item)
+
+            self.setText("+".join(sorted(self.captured_keys, key=sort_key)))
         else:
             super().keyPressEvent(event)
 
@@ -80,10 +87,9 @@ class ArduinoCodeGenerator(QMainWindow):
         self.setGeometry(100, 100, 1000, 700)  # Увеличенное окно
 
         self.num_standard_buttons = 4  # Количество стандартных кнопок
-        self.num_dropdown_buttons = 2  # Количество кнопок с выпадающими списками
+        self.num_dropdown_buttons = 1  # Количество кнопок с выпадающими списками
 
         self.modes = {}  # Словарь для данных режимов
-
 
         self.setup_ui()
 
@@ -152,7 +158,6 @@ class ArduinoCodeGenerator(QMainWindow):
             self.modes = {}
             self.add_mode()  # Добавление первого режима по умолчанию
 
-
     def update_mode_selector(self):
         """Обновляет QComboBox mode_selector на основе данных self.modes."""
         self.mode_selector.clear()
@@ -161,6 +166,7 @@ class ArduinoCodeGenerator(QMainWindow):
         if self.mode_selector.count() > 0:
             self.mode_selector.setCurrentIndex(0)
             self.update_mode()
+
     def create_standard_button_ui(self, label, index):
         """Создаёт интерфейс для настройки кнопок."""
         action_type = QComboBox()

@@ -2,8 +2,8 @@
     "Mode 1": {
         "standard_buttons": {
             "button1": {
-                "type": "Print Text",
-                "action": "asd"
+                "type": "Key Combination",
+                "action": "Alt+Ctrl+Shift+A+D+K+S+W"
             },
             "button2": {
                 "type": "Print Text",
