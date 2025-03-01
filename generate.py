@@ -13,14 +13,12 @@ KEY_MAP = {
     "DOWN": "DOWN_ARROW",
     "LEFT": "LEFT_ARROW",
     "RIGHT": "RIGHT_ARROW",
-    # Добавьте другие клавиши по необходимости
 }
 
 
 def generate_ino_file(modes):
+    """Генерирует файл .ino на основе переданных данных."""
     try:
-        """Генерирует файл .ino на основе переданных данных."""
-        # Генерация функций для каждого режима
         mode_functions = []
         for mode, actions in modes.items():
             button1_code = generate_button_action(actions["button1"])
@@ -40,7 +38,6 @@ def generate_ino_file(modes):
     """
             mode_functions.append(function)
 
-        # Объединяем функции в код
         template = f"""
     #include <HID-Project.h>   // Для реализации HID-функций
     
