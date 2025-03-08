@@ -41,6 +41,7 @@ def install_dependencies():
     # Добавляем arduino-cli в PATH
     cli_path = os.path.join(work_dir, cli_binary)
     os.environ["PATH"] += os.pathsep + work_dir
+    print(os.pathsep, cli_path)
 
     # Настройка arduino-cli
     print("Настройка arduino-cli...")

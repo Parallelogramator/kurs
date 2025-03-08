@@ -89,7 +89,7 @@ class ArduinoCodeGenerator(QMainWindow):
         self.num_standard_buttons = 4  # Количество стандартных кнопок
         self.num_dropdown_buttons = 1  # Количество кнопок с выпадающими списками
 
-        self.modes = {}  # Словарь для данных режимов
+        self.modes = {}  # Словарь для режимов
 
         self.setup_ui()
 
@@ -194,7 +194,7 @@ class ArduinoCodeGenerator(QMainWindow):
     def create_dropdown_button_ui(self, label, index):
         """Создаёт интерфейс для кнопок с выпадающими списками."""
         dropdown_selector = QComboBox()
-        dropdown_selector.addItems(["Nothing", "Volume", "Brightness"])
+        dropdown_selector.addItems(["Nothing", "Volume"])
 
         self.dropdown_buttons_layout.addWidget(QLabel(f"{label}:"), index, 0)
         self.dropdown_buttons_layout.addWidget(dropdown_selector, index, 1)

@@ -19,7 +19,7 @@
             }
         },
         "dropdown_buttons": {
-            "dropdown_button1": "Nothing",
+            "dropdown_button1": "Volume",
             "dropdown_button2": "Volume"
         }
     },
@@ -45,6 +45,29 @@
         "dropdown_buttons": {
             "dropdown_button1": "Volume",
             "dropdown_button2": "Volume"
+        }
+    },
+    "sd4": {
+        "standard_buttons": {
+            "button1": {
+                "type": "Key Combination",
+                "action": ""
+            },
+            "button2": {
+                "type": "Key Combination",
+                "action": ""
+            },
+            "button3": {
+                "type": "Print Text",
+                "action": ""
+            },
+            "button4": {
+                "type": "Print Text",
+                "action": "pr"
+            }
+        },
+        "dropdown_buttons": {
+            "dropdown_button1": "Volume"
         }
     }
 }
