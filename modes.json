@@ -3,7 +3,7 @@
         "standard_buttons": {
             "button1": {
                 "type": "Key Combination",
-                "action": "Alt+Ctrl+Shift+A+D+K+S+W"
+                "action": "Ctrl+C"
             },
             "button2": {
                 "type": "Print Text",
@@ -19,7 +19,7 @@
             }
         },
         "dropdown_buttons": {
-            "dropdown_button1": "Volume",
+            "dropdown_button1": "Nothing",
             "dropdown_button2": "Volume"
         }
     },

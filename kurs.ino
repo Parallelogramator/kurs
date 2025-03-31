@@ -7,9 +7,7 @@ const int button2Pin = 3;
 const int button3Pin = 4;
 const int button4Pin = 5;
     const int switchPin = 4;  // Кнопка для переключения режимов
-    const int potPin = A0;    // Пин потенциометра
-    const int pot1Pin = A0;
-const int pot2Pin = A1;
+    const int pot0Pin = A0;
     
     void handleVolumeControl(int pin) {
     static int lastPotValue = 0; // Предыдущее значение потенциометра
@@ -45,7 +43,9 @@ const int pot2Pin = A1;
             bool button1State,button2State,button3State,button4State;
             checkButtonStates(button1State,button2State,button3State,button4State);
             if (button1State) {
-Keyboard.print("asd");
+Keyboard.press(KEY_LEFT_CTRL);
+Keyboard.press(KEY_C);
+Keyboard.releaseAll();
 }
 if (button2State) {
 Keyboard.print("asd");
@@ -88,15 +88,39 @@ handleVolumeControl(A1);
         }
     };
     
+
+    class sd4 : public ModeStrategy {
+    public:
+        void execute() override{
+            bool button1State,button2State,button3State,button4State;
+            checkButtonStates(button1State,button2State,button3State,button4State);
+            if (button1State) {
+Keyboard.releaseAll();
+}
+if (button2State) {
+Keyboard.releaseAll();
+}
+if (button3State) {
+Keyboard.print("");
+}
+if (button4State) {
+Keyboard.print("pr");
+};
+            
+            handleVolumeControl(A0);
+        }
+    };
+    
     
     class ModeContext {
-        ModeStrategy* strategies[2]; // Список стратегий
+        ModeStrategy* strategies[3]; // Список стратегий
         int currentMode = 0;
     
     public:
         ModeContext() {
             strategies[0] = new mode1();
 strategies[1] = new asdasd();
+strategies[2] = new sd4();
         }
     
         ~ModeContext() {
@@ -106,7 +130,7 @@ strategies[1] = new asdasd();
         }
     
         void switchMode() {
-            currentMode = (currentMode + 1) % 2; // Циклический переход по режимам
+            currentMode = (currentMode + 1) % 3; // Циклический переход по режимам
         }
     
         void executeCurrentMode() {

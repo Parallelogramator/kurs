@@ -21,8 +21,9 @@ def install_dependencies():
     else:
         raise Exception("Unsupported operating system")
 
-    # Создаем рабочую директорию
-    work_dir = os.path.expanduser("~/.arduino-cli")
+    # Создаем рабочую директорию внутри проекта
+    project_dir = os.getcwd()
+    work_dir = os.path.join(project_dir, "tools")  # Создаём папку tools в проекте
     os.makedirs(work_dir, exist_ok=True)
 
     # Скачиваем arduino-cli
@@ -38,23 +39,19 @@ def install_dependencies():
     else:
         subprocess.run(["tar", "-xzf", cli_archive, "-C", work_dir], check=True)
 
-    # Добавляем arduino-cli в PATH
     cli_path = os.path.join(work_dir, cli_binary)
-    os.environ["PATH"] += os.pathsep + work_dir
-    print(os.pathsep, cli_path)
 
     # Настройка arduino-cli
     print("Настройка arduino-cli...")
     subprocess.run(
-        [cli_path, "config", "init", "--additional-urls", "https://downloads.arduino.cc/packages/package_index.json"],
+        [cli_path, "config", "init", "--overwrite", "--additional-urls", "https://downloads.arduino.cc/packages/package_index.json"],
         check=True)
 
     # Устанавливаем ядро для платы Arduino Leonardo
     print("Установка ядра для платы...")
     subprocess.run([cli_path, "core", "install", "arduino:avr"], check=True)
 
-    print("arduino-cli успешно установлен и настроен!")
-
+    print("arduino-cli успешно установлен и настроен в папке проекта!")
 
 if __name__ == "__main__":
     install_dependencies()

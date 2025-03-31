@@ -1,5 +1,3 @@
-import os
-import subprocess
 import serial.tools.list_ports
 import time
 
@@ -7,7 +5,7 @@ def find_pro_micro_port():
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print("Найдено устройство:", port.description)
-        if "Arduino Micro" in port.description or "COM6" in port.description:
+        if "USB" in port.description or "COM5" in port.description:
             return port.device
     return None
 
@@ -32,43 +30,36 @@ def find_bootloader_port(old_port):
 
 def upload_ino_file(ino_path):
     try:
-        if not os.path.exists(ino_path):
-            raise FileNotFoundError(f"Файл {ino_path} не найден.")
+        import pyduinocli
 
-        cli_path = os.path.expanduser("~/.arduino-cli/arduino-cli")
+        arduino = pyduinocli.Arduino(r"tools/arduino-cli.exe")
 
-        # Установка библиотеки HID-Project
-        subprocess.run([cli_path, "lib", "install", "HID-Project"], check=True)
+        boards = arduino.board.list()
+        if not boards['result']:
+            return "Платы не найдены. Проверьте подключение."
+        print(boards)
+        port = boards['result']['detected_ports'][0]['port']['address']
+        fqbn = boards['result']['detected_ports'][0]['matching_boards'][0]['fqbn']
 
-        print("Компиляция...")
-        build_dir = os.path.join(os.path.dirname(ino_path), "build")
-        subprocess.run([cli_path, "compile", "--fqbn", "arduino:avr:micro", "--output-dir", build_dir, ino_path], check=True)
+        compile_result = arduino.compile(sketch=ino_path, fqbn=fqbn)
+        print(compile_result)
+        if not compile_result['result']['success']:
+            print(compile_result['result']['compiler_err'])
+            return compile_result['result']['compiler_err']
 
-        port = find_pro_micro_port()
-        if not port:
-            raise Exception("Arduino Pro Micro не найден. Проверьте подключение.")
-
-        print(f"Переводим {port} в режим загрузчика...")
-        reset_pro_micro(port)
-        time.sleep(1)  # Дополнительная задержка после сброса
-        boot_port = find_bootloader_port(port)
-        if not boot_port:
-            raise Exception("Не удалось определить загрузочный порт.")
-
-        print("Загрузка прошивки...")
-        upload_cmd = [
-            cli_path, "upload", "-p", boot_port, "--fqbn", "arduino:avr:micro", "-v", "--input-dir", build_dir
-        ]
-        print(f"Выполняется: {' '.join(upload_cmd)}")  # Для отладки
-        subprocess.run(upload_cmd, check=True)
-
-        print("Загрузка успешно завершена!")
+        upload_result = arduino.upload(sketch=ino_path, fqbn=fqbn, port=port)
+        print(upload_result)
+        if 'Found programmer' in upload_result['result']['stderr']:
+            print("Загрузка успешна")
+        else:
+            print(upload_result['result']['stderr'])
+            return upload_result['result']['stderr']
         return 1
     except Exception as e:
         return e
 
 if __name__ == "__main__":
-    ino_file = "keyboard1/keyboard1.ino"
+    ino_file = "kurs.ino"
     result = upload_ino_file(ino_file)
     if result != 1:
         print("Ошибка:", result)

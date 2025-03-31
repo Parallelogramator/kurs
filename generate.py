@@ -50,8 +50,7 @@ def generate_ino_file(modes, standard_buttons, dropdown_buttons):
     // Пины для кнопок, переключателя и потенциометра
     {'\n'.join([f'const int button{i + 1}Pin = {i + 2};' for i in range(standard_buttons)])}
     const int switchPin = 4;  // Кнопка для переключения режимов
-    const int potPin = A0;    // Пин потенциометра
-    {'\n'.join([f'const int pot{i + 1}Pin = A{i};' for i in range(dropdown_buttons)])}
+    {'\n'.join([f'const int pot{i}Pin = A{i};' for i in range(dropdown_buttons)])}
     
     void handleVolumeControl(int pin) {{
     static int lastPotValue = 0; // Предыдущее значение потенциометра
@@ -164,6 +163,8 @@ def generate_standard_button_action(n, button):
         keys = button["action"].split("+")
         for key in keys:
             arduino_key = KEY_MAP.get(key.upper(), key.upper())
+            if not arduino_key:
+                continue
             res += f'Keyboard.press(KEY_{arduino_key});\n'
         res += "Keyboard.releaseAll();"
         return ret + res + "\n}"
