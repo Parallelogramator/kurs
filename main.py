@@ -43,8 +43,8 @@ class KeyCaptureLineEdit(QLineEdit):
                 keys.append("Shift")
             if modifiers & Qt.AltModifier:
                 keys.append("Alt")
-            # Добавляем основную клавишу
-            if key >= Qt.Key_A and key <= Qt.Key_Z:
+
+            if Qt.Key_A <= key <= Qt.Key_Z:
                 keys.append(chr(key))
             elif key == Qt.Key_Space:
                 keys.append("Space")
@@ -58,9 +58,8 @@ class KeyCaptureLineEdit(QLineEdit):
                 keys.append("Tab")
             elif key == Qt.Key_Escape:
                 keys.append("Escape")
-            elif key >= Qt.Key_0 and key <= Qt.Key_9:
+            elif Qt.Key_0 <= key <= Qt.Key_9:
                 keys.append(chr(key))
-            # Обновляем текстовое поле с комбинацией
             self.captured_keys.update(keys)
 
             def sort_key(item):
@@ -84,12 +83,12 @@ class ArduinoCodeGenerator(QMainWindow):
         super().__init__()
         self.setStyleSheet(qdarkstyle.load_stylesheet_pyqt5())
         self.setWindowTitle("Arduino Code Generator")
-        self.setGeometry(100, 100, 1000, 700)  # Увеличенное окно
+        self.setGeometry(100, 100, 1000, 700)
 
-        self.num_standard_buttons = 4  # Количество стандартных кнопок
-        self.num_dropdown_buttons = 1  # Количество кнопок с выпадающими списками
+        self.num_standard_buttons = 4
+        self.num_dropdown_buttons = 1
 
-        self.modes = {}  # Словарь для режимов
+        self.modes = {}
 
         self.setup_ui()
 
@@ -112,32 +111,27 @@ class ArduinoCodeGenerator(QMainWindow):
         add_mode_button.clicked.connect(self.add_mode)
         remove_mode_button = QPushButton("Remove Mode")
         remove_mode_button.clicked.connect(self.remove_mode)
-        rename_mode_button = QPushButton("Rename Mode")  # Кнопка для переименования режима
+        rename_mode_button = QPushButton("Rename Mode")
         rename_mode_button.clicked.connect(self.rename_mode)
         mode_control_layout.addWidget(add_mode_button)
         mode_control_layout.addWidget(remove_mode_button)
         mode_control_layout.addWidget(rename_mode_button)
         main_layout.addLayout(mode_control_layout)
 
-        # Сетка для стандартных кнопок
         self.standard_buttons_layout = QGridLayout()
         main_layout.addWidget(QLabel("Standard Buttons:"))
         main_layout.addLayout(self.standard_buttons_layout)
 
-        # Создание интерфейса для стандартных кнопок
         for i in range(self.num_standard_buttons):
             self.create_standard_button_ui(f"Button {i + 1}", i)
 
-        # Сетка для кнопок с выпадающими списками
         self.dropdown_buttons_layout = QGridLayout()
         main_layout.addWidget(QLabel("Dropdown Buttons:"))
         main_layout.addLayout(self.dropdown_buttons_layout)
 
-        # Создание интерфейса для кнопок с выпадающими списками
         for i in range(self.num_dropdown_buttons):
             self.create_dropdown_button_ui(f"Dropdown Button {i + 1}", i)
 
-        # Управляющие кнопки
         self.save_button = QPushButton("Save Changes")
         self.save_button.clicked.connect(self.save_mode_data)
         main_layout.addWidget(self.save_button)
@@ -156,7 +150,7 @@ class ArduinoCodeGenerator(QMainWindow):
                     self.add_mode()
         except FileNotFoundError:
             self.modes = {}
-            self.add_mode()  # Добавление первого режима по умолчанию
+            self.add_mode()
 
     def update_mode_selector(self):
         """Обновляет QComboBox mode_selector на основе данных self.modes."""
@@ -187,7 +181,6 @@ class ArduinoCodeGenerator(QMainWindow):
         self.standard_buttons_layout.addWidget(stacked_input, index, 2)
         self.standard_buttons_layout.addWidget(clear_button, index, 3)
 
-        # Упрощённое именование
         setattr(self, f"standard_button{index + 1}_action_type", action_type)
         setattr(self, f"standard_button{index + 1}_stacked_input", stacked_input)
 
@@ -199,7 +192,6 @@ class ArduinoCodeGenerator(QMainWindow):
         self.dropdown_buttons_layout.addWidget(QLabel(f"{label}:"), index, 0)
         self.dropdown_buttons_layout.addWidget(dropdown_selector, index, 1)
 
-        # Упрощённое именование
         setattr(self, f"dropdown_button{index + 1}_selector", dropdown_selector)
 
     def add_mode(self):
@@ -227,11 +219,9 @@ class ArduinoCodeGenerator(QMainWindow):
         """Переименовывает текущий режим с ограничением на ввод."""
         current_mode = self.mode_selector.currentText()
         if current_mode:
-            # Регулярное выражение: имя должно начинаться с буквы и содержать только латиницу и цифры
             regex = QRegularExpression("^[a-zA-Z][a-zA-Z0-9]*$")
             validator = QRegularExpressionValidator(regex)
 
-            # Создаём диалог для ввода с валидатором
             input_dialog = QInputDialog(self)
             input_dialog.setInputMode(QInputDialog.TextInput)
             input_dialog.setWindowTitle("Rename Mode")
@@ -239,11 +229,9 @@ class ArduinoCodeGenerator(QMainWindow):
             line_edit = input_dialog.findChild(QLineEdit)
             line_edit.setValidator(validator)
 
-            # Показываем диалог
             if input_dialog.exec_() == QInputDialog.Accepted:
                 new_name = input_dialog.textValue().strip()
                 if new_name and new_name not in self.modes:
-                    # Обновление словаря и селектора
                     self.modes[new_name] = self.modes.pop(current_mode)
                     index = self.mode_selector.currentIndex()
                     self.mode_selector.setItemText(index, new_name)
@@ -262,7 +250,6 @@ class ArduinoCodeGenerator(QMainWindow):
                 action_type.setCurrentText(button_data["type"])
                 stacked_input.widget(0).setText(button_data["action"])
                 stacked_input.widget(1).setText(button_data["action"])
-            # Обновление кнопок с выпадающими списками
             for i in range(self.num_dropdown_buttons):
                 dropdown_value = mode_data["dropdown_buttons"][f"dropdown_button{i + 1}"]
                 dropdown_selector = getattr(self, f"dropdown_button{i + 1}_selector")
@@ -284,7 +271,6 @@ class ArduinoCodeGenerator(QMainWindow):
         """Сохраняет текущие данные режима."""
         current_mode = self.mode_selector.currentText()
         if current_mode in self.modes:
-            # Сохранение данных стандартных кнопок
             for i in range(self.num_standard_buttons):
                 action_type = getattr(self, f"standard_button{i + 1}_action_type").currentText()
                 stacked_input = getattr(self, f"standard_button{i + 1}_stacked_input")
@@ -292,7 +278,6 @@ class ArduinoCodeGenerator(QMainWindow):
                 self.modes[current_mode]["standard_buttons"][f"button{i + 1}"] = {"type": action_type,
                                                                                   "action": action_text}
 
-            # Сохранение данных кнопок с выпадающими списками
             for i in range(self.num_dropdown_buttons):
                 dropdown_selector = getattr(self, f"dropdown_button{i + 1}_selector")
                 dropdown_value = dropdown_selector.currentText()
@@ -318,7 +303,6 @@ class ArduinoCodeGenerator(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # app.setStyle('fusion')
     window = ArduinoCodeGenerator()
     window.show()
     sys.exit(app.exec_())

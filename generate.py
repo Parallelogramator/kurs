@@ -1,4 +1,3 @@
-# Словарь сопоставления клавиш из QT в Arduino HID
 KEY_MAP = {
     "CTRL": "LEFT_CTRL",
     "ALT": "LEFT_ALT",
@@ -17,8 +16,6 @@ KEY_MAP = {
 def generate_ino_file(modes, standard_buttons, dropdown_buttons):
     try:
         """Генерирует файл .ino на основе переданных данных."""
-        # Генерация функций для каждого режима
-
         mode_functions = []
         for mode, actions in modes.items():
             button_code = []
@@ -43,7 +40,6 @@ def generate_ino_file(modes, standard_buttons, dropdown_buttons):
     """
             mode_functions.append(function)
 
-        # Объединяем функции в код
         template = f"""
     #include <HID-Project.h>   // Для реализации HID-функций
     
@@ -155,7 +151,6 @@ def generate_standard_button_action(n, button):
     """Генерирует действие для кнопки в зависимости от её типа."""
     ret = f"if (button{n}State) {{\n"
     if button["type"] == "Print Text":
-        # Экранируем кавычки внутри текста
         action_text = button["action"].replace('"', '\\"')
         return ret + f'Keyboard.print("{action_text}");' + "\n}"
     elif button["type"] == "Key Combination":

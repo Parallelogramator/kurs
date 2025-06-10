@@ -1,6 +1,7 @@
 import serial.tools.list_ports
 import time
 
+
 def find_pro_micro_port():
     ports = serial.tools.list_ports.comports()
     for port in ports:
@@ -8,6 +9,7 @@ def find_pro_micro_port():
         if "USB" in port.description or "COM5" in port.description:
             return port.device
     return None
+
 
 def reset_pro_micro(port):
     try:
@@ -19,14 +21,16 @@ def reset_pro_micro(port):
     except Exception as e:
         print(f"Ошибка при сбросе: {e}")
 
+
 def find_bootloader_port(old_port):
-    time.sleep(3)  # Увеличенная задержка для завершения сброса
+    time.sleep(3)
     ports = serial.tools.list_ports.comports()
     for port in ports:
         if port.device != old_port:
             print(f"Новый загрузочный порт: {port.device}")
             return port.device
     return None
+
 
 def upload_ino_file(ino_path):
     try:
@@ -57,6 +61,7 @@ def upload_ino_file(ino_path):
         return 1
     except Exception as e:
         return e
+
 
 if __name__ == "__main__":
     ino_file = "kurs.ino"
