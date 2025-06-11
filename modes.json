@@ -39,7 +39,7 @@
             },
             "button4": {
                 "type": "Key Combination",
-                "action": "Ctrl+D+S"
+                "action": "Alt"
             }
         },
         "dropdown_buttons": {

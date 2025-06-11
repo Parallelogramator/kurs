@@ -6,7 +6,7 @@ def find_pro_micro_port():
     ports = serial.tools.list_ports.comports()
     for port in ports:
         print("Найдено устройство:", port.description)
-        if "USB" in port.description or "COM5" in port.description:
+        if "USB" in port.description or "COM4" in port.description:
             return port.device
     return None
 
